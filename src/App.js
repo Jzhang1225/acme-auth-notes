@@ -1,7 +1,6 @@
 import React from 'react';
-import axios from 'axios';
 import { connect } from 'react-redux';
-import { attemptLogin, logout } from './store';
+import { attemptLogin } from './store';
 import { Route, Switch, Redirect } from 'react-router-dom';
 import Home from './Home';
 import Notes from './Notes';
@@ -14,7 +13,6 @@ class App extends React.Component{
   }
   render(){
     const { auth } = this.props;
-    console.log(auth);
 
     if(!auth.id){
       return (

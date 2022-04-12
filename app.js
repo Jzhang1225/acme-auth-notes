@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 app.use(express.json());
-const { models: { User }} = require('./db');
+const { models: { User, Note }} = require('./db');
 const path = require('path');
 
 app.use('/dist', express.static(path.join(__dirname, 'dist')));
@@ -26,10 +26,36 @@ app.get('/api/auth', async(req, res, next)=> {
   }
 });
 
-app.get('/api/purchases', async(req, res, next)=> {
+app.get('/api/notes', async(req, res, next)=> {
   try {
     const user = await User.byToken(req.headers.authorization);
-    res.send('TODO Send the purchases for this user');
+    const notes = await Note.findAll({
+      where: {
+        userId: user.id
+      }
+    })
+    res.send(notes);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.post('/api/notes', async(req, res, next)=> {
+  try {
+    const note = await Note.create({txt:req.body.text, userId: req.body.userId})
+    res.send(note);
+  }
+  catch(ex){
+    next(ex);
+  }
+});
+
+app.delete('/api/notes/:id', async(req, res, next)=> {
+  try {
+    const note = await Note.findByPk(req.params.id);
+    await note.destroy();
+    res.sendStatus(204);
   }
   catch(ex){
     next(ex);

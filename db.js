@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Sequelize = require('sequelize');
-const { STRING } = Sequelize;
+const { STRING, TEXT } = Sequelize;
+const { faker } = require('@faker-js/faker')
 const config = {
   logging: false
 };
@@ -15,6 +16,13 @@ const User = conn.define('user', {
   username: STRING,
   password: STRING
 });
+
+const Note = conn.define('note', {
+  txt: TEXT,
+})
+
+User.hasMany(Note);
+Note.belongsTo(User);
 
 User.addHook('beforeSave', async(user)=> {
   if(user.changed('password')){
@@ -59,6 +67,11 @@ User.authenticate = async({ username, password })=> {
   throw error;
 };
 
+const randomUserId = async()=>{
+  const users = await User.findAll()
+  return users[Math.floor(Math.random()* users.length)].id
+}
+
 const syncAndSeed = async()=> {
   await conn.sync({ force: true });
   const credentials = [
@@ -69,6 +82,16 @@ const syncAndSeed = async()=> {
   const [lucy, moe, larry] = await Promise.all(
     credentials.map( credential => User.create(credential))
   );
+  await Promise.all(
+    Array(20).fill('').map(async (x) => {
+      const userId = await randomUserId();
+      return Note.create({
+      txt: faker.lorem.paragraph(),
+      userId
+      })
+    })
+  )
+  
   return {
     users: {
       lucy,
@@ -81,6 +104,7 @@ const syncAndSeed = async()=> {
 module.exports = {
   syncAndSeed,
   models: {
-    User
+    User,
+    Note,
   }
 };
